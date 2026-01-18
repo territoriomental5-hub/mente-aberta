@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: false, // Remove widget de desenvolvimento Next.js
+  devIndicators: { buildActivity: true }, // Remove widget de desenvolvimento Next.js
 
   // Ignorar erros durante build (compatibilidade Vercel)
   eslint: {
@@ -189,33 +189,6 @@ const nextConfig: NextConfig = {
     // Tamanhos otimizados para diferentes dispositivos
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
-
-  // Headers CORS para permitir acesso da plataforma Lasy
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*'
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS, PATCH'
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, X-Requested-With, Accept'
-          },
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true'
-          }
-        ]
-      }
-    ]
   },
 };
 
