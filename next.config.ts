@@ -5,10 +5,10 @@ const nextConfig: NextConfig = {
 
   // Ignorar erros durante build (compatibilidade Vercel)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Configuração de imagens para principais provedores
