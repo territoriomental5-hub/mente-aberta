@@ -1,6 +1,7 @@
-// 🗄️ Supabase Client Configuration
+// 🗄️ Supabase Client Configuration with SSR Support
 
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient, createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -9,10 +10,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('⚠️ Missing Supabase environment variables. Please configure them in the project settings.');
 }
 
-export const supabase = createClient(
+// Browser client for client-side operations
+export const supabase = createBrowserClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'
 );
+
+// Server client for server-side operations
+export function createClient() {
+  const cookieStore = cookies();
+
+  return createServerClient(
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseAnonKey || 'placeholder-key',
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  );
+}
 
 // 🎟️ Invite Code Functions (using existing table: invite_codes)
 // ✅ UPDATED: Using new column names: usa, ativo, contagem_de_uso
@@ -42,9 +72,10 @@ export async function validateInviteCode(code: string): Promise<{
       return { valid: false, reason: 'Configuração do Supabase pendente' };
     }
 
+    const supabaseClient = createClient();
     const normalizedCode = normalizeString(code);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('invite_codes')
       .select('*')
       .ilike('usa', normalizedCode)
@@ -82,10 +113,11 @@ export async function consumeInviteCode(code: string): Promise<boolean> {
       return false;
     }
 
+    const supabaseClient = createClient();
     const normalizedCode = normalizeString(code);
 
     // First, get current contagem_de_uso
-    const { data: currentData, error: fetchError } = await supabase
+    const { data: currentData, error: fetchError } = await supabaseClient
       .from('invite_codes')
       .select('contagem_de_uso')
       .ilike('usa', normalizedCode)
@@ -99,7 +131,7 @@ export async function consumeInviteCode(code: string): Promise<boolean> {
     const currentUses = currentData.contagem_de_uso || 0;
 
     // Increment contagem_de_uso by 1
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('invite_codes')
       .update({ contagem_de_uso: currentUses + 1 })
       .ilike('usa', normalizedCode);
